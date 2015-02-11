@@ -15,6 +15,7 @@ FreqShift_i::FreqShift_i(const char *uuid, const char *label) :
     FreqShift_base(uuid, label)
 {
 	sampleRate = 0;
+	firstTime = true;
 }
 
 FreqShift_i::~FreqShift_i()
@@ -165,10 +166,13 @@ int FreqShift_i::serviceFunction()
     	return NOOP;
     }
 
-    vector<float> *output;
-    sampleRate = 1/tmp->SRI.xdelta;
+    vector<float> *output;	//pointer to output data
+    sampleRate = 1/tmp->SRI.xdelta;	//stores sample rate as a function of the inverse of time between samples
     vector<complex<float> > complex_vector;
     complex_vector.resize(tmp->dataBuffer.size());
+
+    //Generates a vector which stores to the real and imaginary parts of a complex exponential
+    //containing the desired amount by which the frequency is to be shifted
     for(unsigned int i=0;i<tmp->dataBuffer.size();i++)
     {
     	float theta = 2*M_PI*frequency_shift*i*tmp->SRI.xdelta;
@@ -177,26 +181,36 @@ int FreqShift_i::serviceFunction()
     	complex<float> complex_value(real_part, imag_part);
     	complex_vector[i] = complex_value;
     }
+
+    //If signal is complex, takes the product of the respective data points of the input data vector
+    //and complex_vector and stores result in the each element of data. Shifts the
+    //frequency by frequency_shift Hz
     if(tmp->SRI.mode)
     {
     	vector<complex<float> > *input = (vector<complex<float> > *)&tmp->dataBuffer;
-    	dotmultiply(*input, complex_vector, data);
+    	vectormultiply(*input, complex_vector, data);
     }
+
+    //If signal is purely real, takes the product of the respective data points of the input data vector
+    //and complex_vector and stores result in the each element of data. Shifts the
+    //frequency by frequency_shift Hz
     else
     {
     	vector<float> *input = (vector<float> *)&tmp->dataBuffer;
-    	dotmultiply(*input, complex_vector, data);
+    	vectormultiply(*input, complex_vector, data);
     }
     output = &data;
 
-
-    tmp->SRI.mode = 1;
-    tmp->sriChanged = true;
-
-    // NOTE: You must make at least one valid pushSRI call
-    if (tmp->sriChanged) {
+    //If this is the first time the service function is run, set mode equal to 1
+    //for complex and push SRI. This only runs the first iteration, as the output data
+    //will always be complex
+    if(firstTime)
+    {
+        tmp->SRI.mode = 1;
     	float_out->pushSRI(tmp->SRI);
+    	firstTime = false;
     }
+
     float_out->pushPacket(*output, tmp->T, tmp->EOS, tmp->streamID);
 
     delete tmp; // IMPORTANT: MUST RELEASE THE RECEIVED DATA BLOCK
