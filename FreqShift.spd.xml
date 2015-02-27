@@ -5,7 +5,7 @@
   <author>
     <name>null</name>
   </author>
-  <description>Multiplies an incoming signal with an exponential to shift frequency</description>
+  <description>Multiplies an incoming signal with an exponential to shift frequency. Output will always be complex regardless of input.</description>
   <propertyfile type="PRF">
     <localfile name="FreqShift.prf.xml"/>
   </propertyfile>

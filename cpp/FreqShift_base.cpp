@@ -16,18 +16,18 @@ FreqShift_base::FreqShift_base(const char *uuid, const char *label) :
 {
     loadProperties();
 
-    float_in = new bulkio::InFloatPort("float_in");
-    addPort("float_in", float_in);
-    float_out = new bulkio::OutFloatPort("float_out");
-    addPort("float_out", float_out);
+    dataFloat_in = new bulkio::InFloatPort("dataFloat_in");
+    addPort("dataFloat_in", dataFloat_in);
+    dataFloat_out = new bulkio::OutFloatPort("dataFloat_out");
+    addPort("dataFloat_out", dataFloat_out);
 }
 
 FreqShift_base::~FreqShift_base()
 {
-    delete float_in;
-    float_in = 0;
-    delete float_out;
-    float_out = 0;
+    delete dataFloat_in;
+    dataFloat_in = 0;
+    delete dataFloat_out;
+    dataFloat_out = 0;
 }
 
 /*******************************************************************************************
