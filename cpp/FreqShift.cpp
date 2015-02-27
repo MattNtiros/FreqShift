@@ -19,12 +19,7 @@
 
 PREPARE_LOGGING(FreqShift_i)
 
-FreqShift_i::FreqShift_i(const char *uuid, const char *label) :
-    FreqShift_base(uuid, label)
-{
-	sampleRate = 0;
-	firstTime = true;
-}
+FreqShift_i::FreqShift_i(const char *uuid, const char *label) :FreqShift_base(uuid, label), firstTime(true), phasor(NULL){}
 
 FreqShift_i::~FreqShift_i()
 {
@@ -168,46 +163,56 @@ FreqShift_i::~FreqShift_i()
 ************************************************************************************************/
 int FreqShift_i::serviceFunction()
 {
-    LOG_DEBUG(FreqShift_i, "serviceFunction() example log message");
-    bulkio::InFloatPort::dataTransfer *tmp = float_in->getPacket(bulkio::Const::BLOCKING);
+    bulkio::InFloatPort::dataTransfer *tmp = dataFloat_in->getPacket(bulkio::Const::BLOCKING);
     if (not tmp) { // No data is available
     	return NOOP;
     }
 
+    map<string, complex<float> >::iterator current_value;
+    string ID = (string)tmp->SRI.streamID;
+
+    current_value = phasor_map.find(ID);
+
+    if(current_value != phasor_map.end())
+    	phasor = &current_value->second;
+    else
+    	phasor_map[ID] = complex<float>(1,0);
+    	current_value = phasor_map.find(ID);
+    	phasor = &current_value->second;
+
     vector<float> *output;	//pointer to output data
-    sampleRate = 1/tmp->SRI.xdelta;	//stores sample rate as a function of the inverse of time between samples
     vector<complex<float> > complex_vector;
     complex_vector.resize(tmp->dataBuffer.size());
+
+
+    complex<float> deltaTheta(cos(2*M_PI*frequency_shift*tmp->SRI.xdelta), sin(2*M_PI*frequency_shift*tmp->SRI.xdelta));
 
     //Generates a vector which stores to the real and imaginary parts of a complex exponential
     //containing the desired amount by which the frequency is to be shifted
     for(unsigned int i=0;i<tmp->dataBuffer.size();i++)
     {
-    	float theta = 2*M_PI*frequency_shift*i*tmp->SRI.xdelta;
-    	float real_part = cos(theta);
-    	float imag_part = sin(theta);
-    	complex<float> complex_value(real_part, imag_part);
-    	complex_vector[i] = complex_value;
+    	complex_vector[i] = *phasor;
+    	*phasor = *phasor*deltaTheta;
     }
 
-    //If signal is complex, takes the product of the respective data points of the input data vector
-    //and complex_vector and stores result in the each element of data. Shifts the
-    //frequency by frequency_shift Hz
-    if(tmp->SRI.mode)
+	*phasor = *phasor/abs(*phasor);
+
+    //If signal is complex, takes the product of input and complex vector and stores result in data
+    //Shifts the frequency by frequency_shift Hz
+    if(COMPLEX)
     {
     	vector<complex<float> > *input = (vector<complex<float> > *)&tmp->dataBuffer;
-    	vectormultiply(*input, complex_vector, data);
+    	vectormultiply(*input, complex_vector, shiftedSignal);
     }
 
-    //If signal is purely real, takes the product of the respective data points of the input data vector
-    //and complex_vector and stores result in the each element of data. Shifts the
-    //frequency by frequency_shift Hz
+    //If signal is purely real, takes the product of input and complex vector and stores result in data
+    //Shifts the frequency by frequency_shift Hz
     else
     {
     	vector<float> *input = (vector<float> *)&tmp->dataBuffer;
-    	vectormultiply(*input, complex_vector, data);
+    	vectormultiply(*input, complex_vector, shiftedSignal);
     }
-    output = &data;
+    output = &shiftedSignal;
 
     //If this is the first time the service function is run, set mode equal to 1
     //for complex and push SRI. This only runs the first iteration, as the output data
@@ -215,11 +220,17 @@ int FreqShift_i::serviceFunction()
     if(firstTime)
     {
         tmp->SRI.mode = 1;
-    	float_out->pushSRI(tmp->SRI);
+    	dataFloat_out->pushSRI(tmp->SRI);
     	firstTime = false;
     }
 
-    float_out->pushPacket(*output, tmp->T, tmp->EOS, tmp->streamID);
+    if (tmp->sriChanged || (dataFloat_out->getCurrentSRI().count(tmp->streamID)==0))
+    	dataFloat_out->pushSRI(tmp->SRI);
+
+    if(tmp->inputQueueFlushed)
+    	LOG_WARN(FreqShift_i, "WARNING - Input Queue Flushed");
+
+    dataFloat_out->pushPacket(*output, tmp->T, tmp->EOS, tmp->streamID);
 
     delete tmp; // IMPORTANT: MUST RELEASE THE RECEIVED DATA BLOCK
     return NORMAL;

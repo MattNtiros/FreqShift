@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015 Axios, Inc.
+* Copyright (C) 2013 Axios, Inc.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -14,16 +14,22 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef FREQSHIFT_IMPL_H
 #define FREQSHIFT_IMPL_H
+#define COMPLEX tmp->SRI.mode
 
 #include "FreqShift_base.h"
+#include <string>
+#include <map>
 using std::vector;
 using std::complex;
 using std::cout;
 using std::endl;
-
-#include "Calc.h"
+using std::transform;
+using std::multiplies;
+using std::map;
+using std::string;
 
 class FreqShift_i : public FreqShift_base
 {
@@ -35,24 +41,21 @@ public:
 
 
 private:
-	double sampleRate;
-	vector<float> data;
+	vector<float> shiftedSignal;
 	bool firstTime;	//indicates whether or not current iteration of the service function is the first
+	complex<float> * phasor;
+	map<string, complex<float> > phasor_map;
 
 	//Function passes three vectors (two input vectors (in1 and in2) and one output vector (d))
 	//and computes the product of the corresponding elements of in1 and in2. Template allows
 	//compatibility with multiple data types
-	template<typename T, typename U, typename V>
-	void vectormultiply(vector<T> &in1, vector<U> &in2, vector<V> &out)
+	template<typename T>
+	void vectormultiply(vector<T> &in1, vector<complex<float> > &in2, vector<float> &out)
 	{
-		typedef typename Calc<T, U>::output_type typeIneed;
-		vector<typeIneed> *castedData = (vector<typeIneed>*)&out;
-		castedData->resize(in1.size());
-		for(unsigned int i=0;i<castedData->size();i++)
-		{
-			Calc<T, U> math(in1[i], in2[i]);
-			(*castedData)[i] = math.multiply();
-		}
+		vector<complex<float> > *outputcx = (vector<complex<float> > *)&out;
+		outputcx->resize(in1.size());
+
+		transform(in1.begin(), in1.end(), in2.begin(), outputcx->begin(), std::multiplies<complex<float> >());
 	}
 
 };

@@ -26,8 +26,8 @@ class FreqShift_base : public Resource_impl, protected ThreadedComponent
         float frequency_shift;
 
         // Ports
-        bulkio::InFloatPort *float_in;
-        bulkio::OutFloatPort *float_out;
+        bulkio::InFloatPort *dataFloat_in;
+        bulkio::OutFloatPort *dataFloat_out;
 
     private:
 };

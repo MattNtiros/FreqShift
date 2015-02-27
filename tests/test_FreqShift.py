@@ -12,6 +12,7 @@ from scipy.odr.odrpack import Output
 class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
     """Test for all resource implementations in FreqShift"""
     
+    
     def setUp(self):
         #set up 
         ossie.utils.testing.ScaComponentTestCase.setUp(self)
@@ -88,12 +89,11 @@ class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
     #   ossie.utils.bluefile.bluefile_helpers
     # for modules that will assist with testing resource with BULKIO ports
     
-    def testFreqShiftReal(self):
-        print "Testing functionality of FreqShift with real input"
-        inputData = [float(x) for x in xrange(50)]
-        self.comp.frequency_shift = 200
-        self.src.push(inputData, complexData = False, sampleRate = 1000.0)
-        
+    def initialize(self, complexD, frequencyShift):
+        inputData = [float(x) for x in xrange(10)]
+        self.comp.frequency_shift = frequencyShift
+        self.src.push(inputData, complexData = complexD, sampleRate = 1000.0)
+               
         outData = []
         count = 0
         while True:
@@ -104,6 +104,15 @@ class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
                 break;
             sleep(.01)
             count+=1
+        return inputData, outData
+       
+    def testFreqShiftReal(self):
+        print "Testing functionality of FreqShift with real input"
+        
+        #inputData, outData, sampleRate = self.initialize_a(freq_shift = 200, complex = False, sampleRate = 1000.0)
+        #print "test"
+    
+        inputData, outData = self.initialize(False, 200)
             
         #need to add portion for time in between samples
 
@@ -132,20 +141,8 @@ class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
             
     def testFreqShiftComplex(self):
         print "Testing functionality of FreqShift with complex input"
-        inputData = [float(x) for x in xrange(50)]
-        self.comp.frequency_shift = 400
-        self.src.push(inputData, complexData = True, sampleRate = 1000.0)
         
-        outData = []
-        count = 0
-        while True:
-            outData = self.sink.getData()
-            if outData:
-                break
-            if count == 1000:
-                break;
-            sleep(.01)
-            count+=1
+        inputData, outData = self.initialize(True, 400)
             
         #need to add portion for time in between samples
 

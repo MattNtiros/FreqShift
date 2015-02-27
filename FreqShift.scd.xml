@@ -11,10 +11,10 @@
     <supportsinterface repid="IDL:CF/PropertySet:1.0" supportsname="PropertySet"/>
     <supportsinterface repid="IDL:CF/TestableObject:1.0" supportsname="TestableObject"/>
     <ports>
-      <provides repid="IDL:BULKIO/dataFloat:1.0" providesname="float_in">
+      <provides repid="IDL:BULKIO/dataFloat:1.0" providesname="dataFloat_in">
         <porttype type="data"/>
       </provides>
-      <uses repid="IDL:BULKIO/dataFloat:1.0" usesname="float_out">
+      <uses repid="IDL:BULKIO/dataFloat:1.0" usesname="dataFloat_out">
         <porttype type="data"/>
       </uses>
     </ports>
