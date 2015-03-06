@@ -1,3 +1,17 @@
+# * Copyright (C) 2015 Axios, Inc.
+# *
+# * This program is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, either version 3 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program. If not, see <http://www.gnu.org/licenses/>.
 # By default, the RPM will install to the standard REDHAWK SDR root location (/var/redhawk/sdr)
 # You can override this at install time using --prefix /new/sdr/root when invoking rpm (preferred method, if you must)
 %{!?_sdrroot: %define _sdrroot /var/redhawk/sdr}
@@ -65,4 +79,3 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/dom/components/%{name}/FreqShift.prf.xml
 %{_prefix}/dom/components/%{name}/FreqShift.spd.xml
 %{_prefix}/dom/components/%{name}/cpp
-
