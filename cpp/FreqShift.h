@@ -53,6 +53,12 @@ private:
 	void vectormultiply(vector<T> &in1, vector<complex<float> > &in2, vector<float> &out)
 	{
 		vector<complex<float> > *outputcx = (vector<complex<float> > *)&out;
+
+		if(in1.size() < in2.size())
+			in2.resize(in1.size());
+		else if(in2.size() < in1.size())
+			in1.resize(in2.size());
+
 		outputcx->resize(in1.size());
 
 		transform(in1.begin(), in1.end(), in2.begin(), outputcx->begin(), std::multiplies<complex<float> >());
